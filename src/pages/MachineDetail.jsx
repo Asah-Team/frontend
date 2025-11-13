@@ -74,12 +74,47 @@ export default function MachineDetail() {
     );
   }
 
-  // Loading 
+  // Skeleton Loading 
   if (!machine) {
     return (
-      <div className="p-8 bg-white rounded-2xl shadow-md h-[94vh] overflow-auto">
-        <h1 className="text-2xl font-bold mb-6">Detail Machine</h1>
-        <p className="text-center text-gray-400 mt-20">Loading...</p>
+      <div className="p-8 bg-white rounded-2xl shadow-md h-[94vh] animate-pulse">
+        <div className="h-7 bg-gray-300 rounded w-48 mb-6"></div>
+
+        <div className="flex justify-between items-start mb-6">
+          <div className="space-y-2">
+            <div className="h-6 w-40 bg-gray-300 rounded"></div>
+            <div className="h-4 w-24 bg-gray-200 rounded"></div>
+          </div>
+
+          <div className="flex gap-3">
+            <div className="h-10 w-32 bg-gray-300 rounded-lg"></div>
+            <div className="h-10 w-20 bg-gray-200 rounded-lg"></div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="border rounded-xl px-5 py-4 bg-gray-100 shadow-sm">
+              <div className="h-4 w-32 bg-gray-300 rounded mb-2"></div>
+              <div className="h-6 w-20 bg-gray-400 rounded"></div>
+            </div>
+          ))}
+        </div>
+
+        <div className="bg-white border rounded-xl p-6 shadow-sm mb-8">
+          <div className="h-4 bg-gray-300 w-32 mb-4 rounded"></div>
+          <div className="h-56 bg-gray-200 rounded"></div>
+        </div>
+
+        <div className="border rounded-xl p-5 bg-gray-100">
+          <div className="flex items-start gap-3">
+            <div className="h-6 w-6 bg-gray-300 rounded-full"></div>
+            <div className="w-full space-y-2">
+              <div className="h-4 w-40 bg-gray-300 rounded"></div>
+              <div className="h-4 w-64 bg-gray-200 rounded"></div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
