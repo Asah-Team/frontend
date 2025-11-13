@@ -46,10 +46,10 @@ export default function Chat() {
   };
 
   return (
-    <div className="p-8 bg-gray-50 rounded-2xl shadow-md h-[94vh] flex flex-col">
+    <div className="p-8 bg-white rounded-2xl shadow-md h-[94vh] flex flex-col">
       <h1 className="text-2xl font-bold mb-4">Chat</h1>
       {/* Area tampilan chat */}
-      <div className="flex-1 bg-white rounded-xl p-6 shadow-inner overflow-y-auto relative">
+      <div className="flex-1 bg-gray-50 rounded-xl p-6 shadow-inner overflow-y-auto relative">
 
         {messages.length === 0 && !isTyping && (
           <div className="absolute inset-0 flex items-center justify-center text-center text-gray-500 px-8">
@@ -93,11 +93,11 @@ export default function Chat() {
       </div>
 
       {/* Input pesan */}
-      <form onSubmit={handleSend} className="mt-4 flex items-center gap-3 bg-white rounded-xl border px-4 py-2 shadow-sm">
+      <form onSubmit={handleSend} className="mt-4 flex items-center gap-3 bg-gray-50 rounded-xl border px-4 py-2 shadow-sm">
         <input
           type="text"
           placeholder="Tulis pesan ..."
-          className="flex-1 outline-none text-gray-700 text-sm"
+          className="flex-1 bg-gray-50 outline-none text-gray-700 text-sm"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
         />
