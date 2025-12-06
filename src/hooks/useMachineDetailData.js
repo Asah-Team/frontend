@@ -51,7 +51,6 @@ export default function useMachineDetailData(id) {
           confidence: latest.confidence,
           failurePredicted: latest.failurePredicted,
           failureType: latest.failureType,
-          anomalyDetected: latest.anomalyDetected,
           predictedFailureTime: latest.predictedFailureTime,
         });
       }
