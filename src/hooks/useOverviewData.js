@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
 import axiosClient from "../api/axiosClient";
 
-const SOCKET_URL = import.meta.env.VITE_WS_URL;
+const SOCKET_URL = import.meta.env.VITE_WS_URL || "http://localhost:3000";
 
 export default function useOverviewData() {
   const [machines, setMachines] = useState([]);
