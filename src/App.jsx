@@ -1,28 +1,45 @@
-import React from "react";
-import { Routes, Route } from "react-router-dom";
-import Sidebar from "./components/Sidebar.jsx";
-import Overview from "./pages/Overview.jsx";
-import Machine from "./pages/Machine.jsx";
-import MachineDetail from "./pages/MachineDetail.jsx";
-import Ticket from "./pages/Ticket.jsx";
-import Chat from "./pages/Chat.jsx";
-import Settings from "./pages/Settings.jsx";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Overview from "./pages/Overview";
+import Machine from "./pages/Machine";
+import MachineDetail from "./pages/MachineDetail";
+import Chat from "./pages/Chat";
+import Ticket from "./pages/Ticket";
+import Settings from "./pages/Settings";
 
-export default function App() {
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import ProtectedRoute from "./components/ProtectedRoute";
+import MainLayout from "./layouts/MainLayout";
+
+function App() {
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
+    <Routes>
 
-      <div className="flex-1 bg-gray-50 p-6 overflow-y-auto">
-        <Routes>
-          <Route path="/" element={<Overview />} />
-          <Route path="/machine" element={<Machine />} />
-          <Route path="/machine/:id" element={<MachineDetail />} />
-          <Route path="/ticket" element={<Ticket />} />
-          <Route path="/chat" element={<Chat />} />
-          <Route path="/settings" element={<Settings />} />
-        </Routes>
-      </div>
-    </div>
+      {/* PUBLIC ROUTES */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+
+      {/* PROTECTED LAYOUT */}
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Overview />} />
+        <Route path="machines" element={<Machine />} />
+        <Route path="machines/:id" element={<MachineDetail />} />
+        <Route path="chat" element={<Chat />} />
+        <Route path="ticket" element={<Ticket />} />
+        <Route path="settings" element={<Settings />} />
+      </Route>
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
   );
 }
+
+export default App;

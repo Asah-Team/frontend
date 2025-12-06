@@ -1,63 +1,54 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Plus, AlertCircle } from "lucide-react";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
+import { Info, Factory, Cpu } from "lucide-react"; // Menggunakan Factory/Cpu agar sesuai tema Machine
+import axiosClient from "../api/axiosClient";
+
+import useMachineDetailData from "../hooks/useMachineDetailData";
+
+import DetailSkeleton from "../components/machine-detail/DetailSkeleton";
+import DetailHeader from "../components/machine-detail/DetailHeader";
+import StatusBadge from "../components/machine-detail/StatusBadge";
+import SummaryGrid from "../components/machine-detail/SummaryGrid";
+import PredictionCard from "../components/machine-detail/PredictionCard";
+import TemperatureChart from "../components/machine-detail/TemperatureChart";
+import CreateTicketPopup from "../components/CreateTicketPopup";
 
 export default function MachineDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // State detail mesin dari backend
-  const [machine, setMachine] = useState(null);
-  const [tempData, setTempData] = useState([]);
-  const [error, setError] = useState(false);
+  const {
+    machine,
+    statistics,
+    tempData,
+    latestPrediction,
+    loading,
+    error,
+  } = useMachineDetailData(id);
 
-  // Popup Create Ticket
   const [showPopup, setShowPopup] = useState(false);
   const [ticket, setTicket] = useState({
     priority: "Warning",
-    date: "",
     title: "",
     description: "",
   });
 
-  // Fetch detail dari backend
-  useEffect(() => {
-    async function fetchMachine() {
-      try {
-        const res = await fetch(`http://localhost:3000/api/machines/${id}`);
-        if (!res.ok) throw new Error("not available");
-        const data = await res.json();
-
-        setMachine(data);
-        setTempData(Array.isArray(data.temperatureTrend) ? data.temperatureTrend : []);
-        setError(false);
-      } catch (e) {
-        console.error("Gagal memuat detail mesin:", e);
-        setError(true);
-      }
-    }
-    fetchMachine();
-  }, [id]);
-
-  // Create Ticket -> POST ke backend, lalu pindah ke /ticket
+  // Logic Submit Ticket
   const handleCreateTicket = async () => {
     try {
-      await fetch("http://localhost:3000/api/tickets", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ machineId: id, ...ticket }),
-      });
+      if (!ticket.title || !ticket.description) {
+        alert("Isi semua field sebelum membuat ticket.");
+        return;
+      }
 
+      const payload = {
+        machineId: id,
+        title: ticket.title,
+        description: ticket.description,
+      };
+
+      await axiosClient.post("/maintenance-tickets", payload);
       setShowPopup(false);
-      setTicket({ priority: "Warning", date: "", title: "", description: "" });
       navigate("/ticket");
     } catch (err) {
       console.error("Gagal membuat ticket:", err);
@@ -65,210 +56,100 @@ export default function MachineDetail() {
     }
   };
 
+  // State Error
   if (error) {
     return (
-      <div className="p-8 bg-white rounded-2xl shadow-md h-[94vh] overflow-auto">
-        <h1 className="text-2xl font-bold mb-6">Detail Machine</h1>
-        <p className="text-center text-gray-500 mt-20">Gagal menampilkan Detail Mesin</p>
+      <div className="p-8">
+        <h1 className="text-xl font-bold">Detail Machine</h1>
+        <p className="mt-6 text-gray-500">Gagal memuat detail mesin.</p>
       </div>
     );
   }
 
-  // Skeleton Loading 
-  if (!machine) {
-    return (
-      <div className="p-8 bg-white rounded-2xl shadow-md h-[94vh] animate-pulse">
-        <div className="h-7 bg-gray-300 rounded w-48 mb-6"></div>
-
-        <div className="flex justify-between items-start mb-6">
-          <div className="space-y-2">
-            <div className="h-6 w-40 bg-gray-300 rounded"></div>
-            <div className="h-4 w-24 bg-gray-200 rounded"></div>
-          </div>
-
-          <div className="flex gap-3">
-            <div className="h-10 w-32 bg-gray-300 rounded-lg"></div>
-            <div className="h-10 w-20 bg-gray-200 rounded-lg"></div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="border rounded-xl px-5 py-4 bg-gray-100 shadow-sm">
-              <div className="h-4 w-32 bg-gray-300 rounded mb-2"></div>
-              <div className="h-6 w-20 bg-gray-400 rounded"></div>
-            </div>
-          ))}
-        </div>
-
-        <div className="bg-white border rounded-xl p-6 shadow-sm mb-8">
-          <div className="h-4 bg-gray-300 w-32 mb-4 rounded"></div>
-          <div className="h-56 bg-gray-200 rounded"></div>
-        </div>
-
-        <div className="border rounded-xl p-5 bg-gray-100">
-          <div className="flex items-start gap-3">
-            <div className="h-6 w-6 bg-gray-300 rounded-full"></div>
-            <div className="w-full space-y-2">
-              <div className="h-4 w-40 bg-gray-300 rounded"></div>
-              <div className="h-4 w-64 bg-gray-200 rounded"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // LOGIC TANGGAL
+  const formattedDate = machine?.updatedAt 
+    ? new Date(machine.updatedAt).toLocaleDateString("id-ID", {
+        day: 'numeric', month: 'long', year: 'numeric'
+      })
+    : null;
 
   return (
     <div className="p-8 bg-white rounded-2xl shadow-md h-[94vh] overflow-auto">
-      {/* HEADER */}
-      <div className="flex justify-between items-start mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Detail Machine</h1>
-          <p className="text-sm text-gray-500">ID: {machine.id}</p>
-        </div>
+      {/* State Loading */}
+      {loading || !machine ? (
+        <DetailSkeleton />
+      ) : (
+        <>
+          {/* Main Content */}
+          <DetailHeader 
+            machine={machine} 
+            onBack={() => navigate(-1)} 
+            onCreateTicket={() => setShowPopup(true)} 
+          />
+          
+          <StatusBadge status={machine.status} />
+          
+          <SummaryGrid machine={machine} statistics={statistics} />
 
-        <div className="flex gap-3">
-          <button
-            onClick={() => setShowPopup(true)}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-          >
-            <Plus size={16} /> Create Ticket
-          </button>
+          {/* DESCRIPTION CARD */}
+          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm mb-8 relative overflow-hidden">
+            {/* Dekorasi Background */}
+            <div className="absolute top-0 right-0 p-4 opacity-[0.03]">
+              <Cpu size={100} />
+            </div>
 
-          <button
-            onClick={() => navigate(-1)}
-            className="border px-4 py-2 rounded-lg hover:bg-gray-100 transition text-sm"
-          >
-            Back
-          </button>
-        </div>
-      </div>
+            <div className="flex items-start gap-4 relative z-10">
+              {/* Ikon Box */}
+              <div className="p-3 bg-gray-100 text-gray-600 rounded-xl mt-1">
+                <Cpu size={22} />
+              </div>
 
-      {/* Summary 3 Card diatas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <SummaryCard label="Health Score" value={`${machine.score ?? "-"}%`} />
-        <SummaryCard label="Rata-rata Suhu" value={`${machine.avgTemp ?? "-"}°C`} />
-        <SummaryCard label="Rata-rata Tool Wear" value={`${machine.avgWear ?? "-"}%`} />
-      </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Machine Description</h3>
+                
+                {/* Deskripsi */}
+                <div className="text-gray-600 text-sm leading-7 text-justify">
+                  {machine.description ? (
+                    machine.description
+                  ) : (
+                    <span className="italic text-gray-400 flex items-center gap-2">
+                      <Info size={16} /> No detailed description available for this unit.
+                    </span>
+                  )}
+                </div>
 
-      {/* Grafik */}
-      <div className="bg-white border rounded-xl p-6 shadow-sm mb-8">
-        <p className="font-semibold mb-3">Grafik Suhu</p>
-        <div className="h-56">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={tempData}>
-              <XAxis dataKey="day" />
-              <YAxis />
-              <Tooltip />
-              <Area
-                type="monotone"
-                dataKey="value"
-                stroke="#3b82f6"
-                fill="url(#colorTemp)"
-              />
-              <defs>
-                <linearGradient id="colorTemp" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.45} />
-                  <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Recommendation */}
-      <div className="border rounded-xl p-5 bg-blue-50">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="text-blue-600" />
-          <div>
-            <p className="font-semibold">Maintenance Recommendations</p>
-            <p className="text-sm text-gray-600 mt-1">
-              {(machine.recommendation && machine.recommendation.message) || "-"}
-              {machine?.recommendation?.daysLeft
-                ? ` (within ${machine.recommendation.daysLeft} days)`
-                : ""}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {showPopup && (
-        <CreateTicketPopup
-          ticket={ticket}
-          setTicket={setTicket}
-          onClose={() => setShowPopup(false)}
-          onSubmit={handleCreateTicket}
-        />
-      )}
-    </div>
-  );
-}
-
-function SummaryCard({ label, value }) {
-  return (
-    <div className="border rounded-xl px-5 py-4 bg-gray-50 shadow-sm">
-      <p className="text-sm text-gray-500">{label}</p>
-      <p className="text-lg font-bold mt-1">{value}</p>
-    </div>
-  );
-}
-
-function CreateTicketPopup({ ticket, setTicket, onClose, onSubmit }) {
-  return (
-    <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-      <div className="bg-white w-full max-w-lg rounded-2xl p-7 shadow-lg">
-        <h2 className="text-2xl font-bold mb-6">Create Ticket</h2>
-
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <label className="text-sm font-semibold">Priority</label>
-            <select
-              value={ticket.priority}
-              onChange={(e) => setTicket({ ...ticket, priority: e.target.value })}
-              className="border rounded-lg px-2 h-[44px] w-[220px]"
-            >
-              <option>Critical</option>
-              <option>Warning</option>
-            </select>
+                {/* Footer Data Teknis */}
+                <div className="mt-4 pt-4 border-t border-gray-100 flex gap-6 text-xs text-gray-400 font-medium">
+                  {/* Type */}
+                  <span className="flex items-center gap-1">
+                    <Factory size={12} /> Type: {machine.type || "-"}
+                  </span>
+                  
+                  {/* Last Updated */}
+                  {formattedDate && (
+                    <span>Last Updated: {formattedDate}</span>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label className="text-sm font-semibold">Due Date</label>
-            <input
-              type="date"
-              value={ticket.date}
-              onChange={(e) => setTicket({ ...ticket, date: e.target.value })}
-              className="border rounded-lg p-2 w-full"
+          <PredictionCard latestPrediction={latestPrediction} />
+          
+          <TemperatureChart data={tempData} />
+
+          {/* Popup Ticket */}
+          {showPopup && (
+            <CreateTicketPopup
+              ticket={ticket}
+              setTicket={setTicket}
+              technicians={[]}
+              onClose={() => setShowPopup(false)}
+              onSubmit={handleCreateTicket}
             />
-          </div>
-        </div>
-
-        <label className="text-sm font-semibold">Title</label>
-        <input
-          type="text"
-          value={ticket.title}
-          onChange={(e) => setTicket({ ...ticket, title: e.target.value })}
-          className="border rounded-lg p-2 w-full mb-4"
-        />
-
-        <label className="text-sm font-semibold">Description</label>
-        <textarea
-          value={ticket.description}
-          onChange={(e) => setTicket({ ...ticket, description: e.target.value })}
-          className="border rounded-lg p-2 w-full h-28"
-        />
-
-        <div className="flex justify-end gap-2 mt-6">
-          <button onClick={onClose} className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300">
-            Cancel
-          </button>
-          <button onClick={onSubmit} className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">
-            Create
-          </button>
-        </div>
-      </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

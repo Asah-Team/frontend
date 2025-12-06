@@ -1,164 +1,86 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import useTickets from "../hooks/useTickets";
+import { Ticket as TicketIcon, Inbox } from "lucide-react";
 
-// Utility Waktu
-function formatRelativeTime(date) {
-  const now = new Date();
-  const target = new Date(date);
-  const diff = now - target;
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  return days === 0 ? "today" : `${days} days ago`;
-}
+import TicketItem from "../components/ticket/TicketItem";
+import TicketDetail from "../components/ticket/TicketDetail";
+import TicketFilter from "../components/ticket/TicketFilter";
+import TicketSkeleton from "../components/ticket/TicketSkeleton";
 
-function daysUntil(date) {
-  const now = new Date();
-  const target = new Date(date);
-  const diff = target - now;
-  return Math.ceil(diff / (1000 * 60 * 60 * 24));
-}
-
-// Prioritas (Critical, Warning)
-function PriorityBadge({ priority }) {
-  const colors = {
-    critical: "bg-red-100 text-red-700",
-    warning: "bg-yellow-100 text-yellow-700",
-  };
-  return (
-    <span className={`px-3 py-1 text-sm font-semibold rounded-md ${colors[priority] || "bg-gray-100 text-gray-600"}`}>
-      {priority}
-    </span>
-  );
-}
-
-// list item tiket
-function TicketItem({ t, onView }) {
-  return (
-    <div className="w-full bg-white border rounded-2xl px-6 py-5 shadow-sm flex items-start justify-between gap-6">
-      <div>
-        <div className="flex items-center gap-3">
-          <h3 className="text-lg font-semibold">
-            {t.title} <span className="text-gray-500">({t.machineId})</span>
-          </h3>
-          <PriorityBadge priority={t.priority} />
-        </div>
-
-        <p className="text-sm text-gray-400 mt-1">Ticket {t.number}</p>
-        <p className="text-[15px] text-gray-600 mt-3 leading-relaxed">{t.description}</p>
-      </div>
-
-      <button
-        onClick={() => onView(t)}
-        className="self-center bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg"
-      >
-        View Details
-      </button>
-    </div>
-  );
-}
-
-//  Ticket Detail 
-function TicketDetail({ open, ticket, onClose, onDone }) {
-  if (!open || !ticket) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4">
-      <div className="w-full max-w-2xl bg-white rounded-2xl p-7">
-        <div className="flex justify-between items-start mb-6">
-          <h2 className="text-2xl font-bold">Ticket {ticket.number}</h2>
-          <button onClick={onClose} className="text-2xl text-gray-500 hover:text-gray-700">×</button>
-        </div>
-
-        <div className="border rounded-2xl p-5">
-          <p className="font-semibold mb-5">Details</p>
-
-          <div className="grid grid-cols-2 gap-6 mb-6">
-            <div>
-              <p className="text-sm text-gray-500">Machine</p>
-              <p className="text-lg font-semibold">{ticket.machineId}</p>
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-500">Priority</p>
-              <p className="text-lg font-semibold capitalize">{ticket.priority}</p>
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-500">Created</p>
-              <p className="text-lg font-semibold">{ticket.createdHuman}</p>
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-500">Due Date</p>
-              <p className="text-lg font-semibold">{ticket.dueInDays} days</p>
-            </div>
-          </div>
-
-          <p className="text-sm text-gray-500 mb-1">Description</p>
-          <p className="text-[15px] text-gray-700 leading-7">{ticket.description}</p>
-        </div>
-
-        <div className="mt-6">
-          <button
-            onClick={() => onDone(ticket.id)}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl text-lg font-medium">
-            Done
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Page Ticket 
 export default function Ticket() {
-  const [tickets, setTickets] = useState([]);
+  const { tickets, loading } = useTickets();
+
   const [selected, setSelected] = useState(null);
-  const [open, setOpen] = useState(false);
+  const [openDetail, setOpenDetail] = useState(false);
+  const [filter, setFilter] = useState("open");
 
-  useEffect(() => {
-    fetchTickets();
-  }, []);
-
-  const fetchTickets = async () => {
-    try {
-      const res = await fetch("http://localhost:3000/api/tickets?status=open");
-      const data = await res.json();
-
-      setTickets(
-        data.map(t => ({
-          ...t,
-          createdHuman: formatRelativeTime(t.createdAt),
-          dueInDays: daysUntil(t.dueDate)
-        }))
-      );
-    } catch (err) {
-      console.error("Gagal menampilkan tiket:", err);
-      setTickets([]); 
-    }
-  };
-
-  const handleDone = async (id) => {
-    try {
-      await fetch(`http://localhost:3000/api/tickets/${id}/close`, { method: "PUT" });
-    } catch {}
-    setTickets((prev) => prev.filter((t) => t.id !== id));
-    setOpen(false);
-  };
+  const filteredTickets = tickets.filter((t) => t.status === filter);
 
   return (
-    <div className="p-8 bg-white rounded-2xl shadow-md h-[94vh] overflow-auto">
-      <h1 className="text-2xl font-bold mb-6">Ticket</h1>
-
-      {tickets.length === 0 ? (
-        <p className="text-center text-gray-400 mt-20">No active tickets</p>
-      ) : (
-        <div className="space-y-5">
-          {tickets.map((t) => (
-            <TicketItem key={t.id} t={t} onView={(t) => { setSelected(t); setOpen(true); }} />
-          ))}
+    <div className="flex flex-col h-[94vh] bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative">
+      
+      {/* HEADER */}
+      <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white z-20 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <TicketIcon size={20} className="text-blue-600" />
+          </div>
+          <div>
+            <h1 className="text-base font-bold text-gray-800">Maintenance Tickets</h1>
+          </div>
         </div>
-      )}
+      </div>
 
-      <TicketDetail open={open} ticket={selected} onClose={() => setOpen(false)} onDone={handleDone} />
+      {/* FILTER BAR */}
+      <div className="px-6 py-3 border-b border-gray-100 bg-white z-10 shrink-0">
+        <TicketFilter filter={filter} setFilter={setFilter} />
+      </div>
+
+      {/* CONTENT AREA */}
+      <div className="flex-1 bg-gray-50/50 p-6 overflow-y-auto custom-scrollbar relative">
+        
+        {loading ? (
+          <div className="space-y-4">
+            <TicketSkeleton />
+            <TicketSkeleton />
+            <TicketSkeleton />
+          </div>
+        ) : filteredTickets.length === 0 ? (
+          // Empty State
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 opacity-60">
+            <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mb-4">
+              <Inbox size={32} className="text-blue-500" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-1">
+              Tidak ada tiket
+            </h3>
+            <p className="text-sm text-gray-500 max-w-xs leading-relaxed">
+              Saat ini tidak ada tiket dengan status <span className="font-medium text-blue-600">"{filter}"</span>.
+            </p>
+          </div>
+        ) : (
+          // List Tiket
+          <div className="space-y-4">
+            {filteredTickets.map((t) => (
+              <TicketItem
+                key={t.id}
+                ticket={t}
+                onView={() => {
+                  setSelected(t);
+                  setOpenDetail(true);
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* DETAIL MODAL */}
+      <TicketDetail
+        open={openDetail}
+        ticket={selected}
+        onClose={() => setOpenDetail(false)}
+      />
     </div>
   );
 }

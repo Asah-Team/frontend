@@ -1,25 +1,27 @@
 import React from "react";
 import { PieChart, Pie, Cell } from "recharts";
+import useAnimatedValue from "../../hooks/useAnimatedValue";
 
 export default function CardKondisiUmum({ kondisiUmum, status }) {
-  const value = kondisiUmum ?? 0;
+  const rawValue = kondisiUmum ?? 0;
+  const animatedValue = useAnimatedValue(rawValue, 700);
 
-  // Struktur data kosong untuk Recharts
+  const value = Math.max(0, Math.min(100, animatedValue));
+
+  let color = "#22c55e";
+  if (status === "Perlu Perhatian") color = "#facc15";
+  if (status === "Buruk") color = "#ef4444";
+
   const data = [
-    { name: "Kondisi", value },
-    { name: "Sisa", value: 100 - value },
+    { name: "Used", value },
+    { name: "Rest", value: 100 - value },
   ];
 
   return (
     <div className="bg-white p-6 rounded-xl shadow border flex flex-col">
-      {/* Header */}
-      <p className="font-semibold text-gray-700 mb-3 text-left">
-        Kondisi Umum Mesin
-      </p>
+      <p className="font-semibold text-gray-700 mb-3">Kondisi Umum Mesin</p>
 
-      {/* Kontainer chart */}
-      <div className="relative flex justify-center items-center mt-4 overflow-visible">
-        {/* Gauge setengah lingkaran */}
+      <div className="relative flex justify-center items-center mt-2 overflow-visible">
         <PieChart width={240} height={160}>
           <Pie
             data={data}
@@ -27,21 +29,19 @@ export default function CardKondisiUmum({ kondisiUmum, status }) {
             endAngle={0}
             innerRadius={85}
             outerRadius={105}
-            dataKey="value"
             stroke="none"
+            dataKey="value"
             cx="50%"
             cy="70%"
           >
-            {/* Warna placeholder */}
-            <Cell fill="#d1d5db" />
+            <Cell fill={color} />
             <Cell fill="#f3f4f6" />
           </Pie>
         </PieChart>
 
-        {/* Teks di tengah setengah lingkaran */}
         <div className="absolute inset-0 flex flex-col items-center justify-end pb-8">
-          <p className="text-2xl font-bold text-gray-700">
-            {kondisiUmum != null ? `${kondisiUmum}%` : "-"}
+          <p className="text-3xl font-bold" style={{ color }}>
+            {Math.round(value)}%
           </p>
           <p className="text-sm text-gray-500 mt-1">
             {status ?? "Status"}

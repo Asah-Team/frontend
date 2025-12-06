@@ -1,112 +1,86 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
+import { Search, Cpu, Server } from "lucide-react";
+
+// Hook & Components
+import useMachineList from "../hooks/useMachineList";
+import MachineCard from "../components/machine/MachineCard";
+import MachineSkeleton from "../components/machine/MachineSkeleton";
 
 export default function Machine() {
   const navigate = useNavigate();
-
-  // State data mesin dari backend
-  const [machines, setMachines] = useState([]);
-
-  // State untuk search
+  const { machines, loading } = useMachineList();
   const [search, setSearch] = useState("");
 
-  // fetch data mesin dari backend
-  // setiap mesin memiliki properti: id, name, score(0-100), status
-  useEffect(() => {
-    async function fetchMachines() {
-      try {
-        const res = await fetch("http://localhost:3000/api/machines");
-        const data = await res.json();
-        setMachines(data);
-      } catch (err) {
-        console.error("Gagal memuat data mesin:", err);
-      }
-    }
-
-    fetchMachines();
-
-    // (Opsional) auto refresh dashboard setiap 5 detik
-    const interval = setInterval(fetchMachines, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Filter mesin berdasarkan search
   const filtered = machines.filter((m) =>
-    m.name?.toLowerCase().includes(search.toLowerCase())
+    m.name.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <div className="p-8 bg-white rounded-2xl shadow-md h-[94vh] overflow-auto">
-      <h1 className="text-2xl font-bold mb-6">Machine</h1>
-
-      {/* Search Bar */}
-      <div className="flex items-center gap-3 px-4 py-3 border rounded-xl bg-gray-50 mb-8">
-        <Search className="text-gray-500" size={18} />
-        <input
-          type="text"
-          placeholder="Search Machines ..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-transparent outline-none text-sm"
-        />
+    <div className="flex flex-col h-[94vh] bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative">
+      
+      {/* HEADER */}
+      <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white z-20 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <Cpu size={20} className="text-blue-600" />
+          </div>
+          <div>
+            <h1 className="text-base font-bold text-gray-800">Machine</h1>
+          </div>
+        </div>
       </div>
 
-      {/* Grid daftar mesin */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filtered.map((m) => {
-          const stat = m.status || {
-            label: "-",
-            color: "bg-gray-200 text-gray-600",
-            bar: "#d1d5db",
-          };
+      {/* SEARCH BAR */}
+      <div className="px-6 py-3 border-b border-gray-100 bg-white z-10 shrink-0">
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="text"
+            placeholder="Cari mesin berdasarkan nama..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 
+            focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
+          />
+        </div>
+      </div>
 
-          // Data untuk progress bar
-          const chartData = [{ name: "Health", value: m.score }];
-
-          return (
-            <div
-              key={m.id}
-              onClick={() => navigate(`/machine/${m.id}`)} 
-              className="cursor-pointer p-5 bg-gray-50 border rounded-xl shadow-sm hover:shadow-md transition">
-                
-              {/* Nama mesin + status */}
-              <div className="flex justify-between items-center mb-4">
-                <div>
-                  <h2 className="font-semibold">{m.name}</h2>
-                  <p className="text-sm text-gray-500">{m.id}</p>
-                </div>
-                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${stat.color}`}>
-                  {stat.label}
-                </span>
-              </div>
-
-              {/* Label */}
-              <p className="text-sm text-gray-500 mb-2">Health Score</p>
-
-              {/* Progress bar */}
-              <div className="h-4 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData} layout="vertical">
-                    <XAxis type="number" domain={[0, 100]} hide />
-                    <YAxis type="category" dataKey="name" hide />
-                    <Bar
-                      dataKey="value"
-                      barSize={14}
-                      fill={stat.bar} // warna dari backend
-                      background={{ fill: "#e5e7eb", radius: 8 }}
-                      radius={[8, 8, 8, 8]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Persentase */}
-              <p className="text-sm font-semibold mt-2">{m.score}%</p>
+      {/* CONTENT AREA */}
+      <div className="flex-1 bg-gray-50/50 p-6 overflow-y-auto custom-scrollbar relative">
+        
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+             <MachineSkeleton />
+             <MachineSkeleton />
+             <MachineSkeleton />
+             <MachineSkeleton />
+             <MachineSkeleton />
+             <MachineSkeleton />
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 opacity-60">
+            <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mb-4">
+              <Server size={32} className="text-blue-500" />
             </div>
-          );
-        })}
+            <h3 className="text-lg font-semibold text-gray-800 mb-1">
+              Mesin tidak ditemukan
+            </h3>
+            <p className="text-sm text-gray-500 max-w-xs leading-relaxed">
+              Tidak ada mesin yang cocok dengan kata kunci <span className="font-medium text-blue-600">"{search}"</span>.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filtered.map((m) => (
+              <MachineCard 
+                key={m.id} 
+                machine={m} 
+                onClick={() => navigate(`/machines/${m.id}`)} 
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
