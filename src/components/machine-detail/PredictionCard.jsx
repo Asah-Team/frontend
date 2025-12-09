@@ -12,6 +12,14 @@ export default function PredictionCard({ latestPrediction }) {
     anomalyDetected, predictedFailureTime, confidence, timestamp 
   } = latestPrediction;
 
+  const formatRiskScore = (score) => {
+    if (score == null) return "0.0";
+    if (score > 1) {
+      return score.toFixed(1);
+    }
+    return (score * 100).toFixed(1);
+  };
+
   // Status Logic
   let status = "healthy";
   if (failurePredicted) status = "critical";
@@ -73,7 +81,8 @@ export default function PredictionCard({ latestPrediction }) {
             <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Risk Probability</span>
             <div className="flex items-baseline gap-1">
               <span className="text-5xl font-black text-gray-900 tracking-tight">
-                {(riskScore * 100).toFixed(1)}
+                {/* --- MENGGUNAKAN HELPER FUNCTION DI SINI --- */}
+                {formatRiskScore(riskScore)}
               </span>
               <span className="text-lg font-bold text-gray-400">%</span>
             </div>
