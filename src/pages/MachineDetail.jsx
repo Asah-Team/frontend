@@ -74,7 +74,7 @@ export default function MachineDetail() {
     : null;
 
   return (
-    <div className="p-8 bg-white rounded-2xl shadow-md h-[94vh] overflow-auto">
+    <div className="p-8 bg-white rounded-2xl shadow-md h-[94vh] overflow-auto custom-scrollbar">
       {/* State Loading */}
       {loading || !machine ? (
         <DetailSkeleton />
