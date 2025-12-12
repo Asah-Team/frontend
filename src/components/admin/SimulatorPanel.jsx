@@ -1,5 +1,5 @@
 import React from "react";
-import { Activity, Play, Square, AlertTriangle, Zap } from "lucide-react";
+import { Activity, Play, Square, AlertTriangle } from "lucide-react";
 
 export default function SimulatorPanel({ simType, onStartNormal, onStartAnomaly, onStop }) {
   return (
@@ -27,7 +27,7 @@ export default function SimulatorPanel({ simType, onStartNormal, onStartAnomaly,
       <div className={`bg-white rounded-2xl p-6 shadow-sm border-2 transition-all duration-300 flex flex-col h-full ${simType === 'anomaly' ? 'border-red-400 shadow-red-100' : 'border-gray-100'}`}>
           <div className="flex justify-between items-start mb-6">
               <div className="flex items-center gap-4">
-                  <div className={`p-3 rounded-xl ${simType === 'anomaly' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}><Zap size={28} /></div>
+                  <div className={`p-3 rounded-xl ${simType === 'anomaly' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}><AlertTriangle size={28} /></div>
                   <div><h3 className="font-bold text-gray-800 text-lg">Anomaly Simulation</h3><p className="text-xs text-gray-500 font-medium">Fault Injection Mode</p></div>
               </div>
               <div className={`px-3 py-1.5 rounded-full text-xs font-bold border flex items-center gap-2 ${simType === 'anomaly' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-gray-50 border-gray-200 text-gray-500'}`}>
