@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import axiosClient from "../api/axiosClient";
+import { useAuth } from "../context/AuthContext"; 
+import { toast } from "react-hot-toast"; 
 
 export default function useSettings() {
+  const { logout } = useAuth();
   const [loading, setLoading] = useState(true);
   
   // Data User
@@ -29,19 +32,20 @@ export default function useSettings() {
   };
 
   const handleResetPassword = async () => {
+    if (!resetPasswordEmail) return toast.error("Email tidak boleh kosong");
+    
     try {
       await axiosClient.post("/auth/reset-password", {
         email: resetPasswordEmail,
       });
-      alert("Password reset link telah dikirim ke email Anda.");
+      toast.success("Link reset password dikirim ke email Anda.");
     } catch (err) {
-      alert("Gagal mengirim reset password.");
+      toast.error("Gagal mengirim reset password.");
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    window.location.href = "/login";
+    logout(); 
   };
 
   return {

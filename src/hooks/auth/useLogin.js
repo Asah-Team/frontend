@@ -1,45 +1,38 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import axiosClient from "../../api/axiosClient";
+import { useAuth } from "../../context/AuthContext";
+import { toast } from "react-hot-toast";
 
-export default function useLogin() {
-  const navigate = useNavigate();
-
-  // State
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [error, setError] = useState("");
+const useLogin = () => {
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Handle Input Change
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
+
   const handleChange = (field, value) => {
-    if (error) setError("");
-    setForm({ ...form, [field]: value });
+    setForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+    setError(null);
   };
 
-  // Handle Submit
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
+    setError(null);
 
     try {
-      const res = await axiosClient.post("/auth/signin", form);
-      const accessToken = res.data?.accessToken;
-      const refreshToken = res.data?.refreshToken;
-
-      if (!accessToken) {
-        throw new Error("Token tidak diterima.");
-      }
-
-      // Simpan token
-      localStorage.setItem("accessToken", accessToken);
-      localStorage.setItem("refreshToken", refreshToken);
-
-      navigate("/");
+      await login(form.email, form.password);
+      toast.success("Login Berhasil!");
     } catch (err) {
-      console.error(err);
-      setError("Login gagal, periksa email atau password Anda.");
+      const msg = err.response?.data?.message || "Login gagal. Periksa email/password.";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
@@ -51,7 +44,9 @@ export default function useLogin() {
     isLoading,
     showPassword,
     setShowPassword,
-    handleChange,
+    handleChange, 
     handleLogin,
   };
-}
+};
+
+export default useLogin;

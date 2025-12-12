@@ -1,45 +1,36 @@
 import axios from "axios";
+import Cookies from "js-cookie";
 
 const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  headers: { "Content-Type": "application/json" },
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api",
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
-// Inject token automatically
 axiosClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("accessToken");
-
+    const token = Cookies.get("accessToken");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Handle invalid/expired token
 axiosClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
-
-    // Cek apakah errornya 401
     if (error.response?.status === 401) {
-      
-      if (!originalRequest.url.includes("/auth/signin")) {
-        console.warn("Token invalid atau expired.");
-
-        // Hapus token
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-
-        // redirect ke login
-        window.location.href = "/login";
-      }
+       // Opsional: Logic Refresh Token bisa ditaruh di sini
+       // Jika gagal refresh atau token mati:
+       if (!window.location.pathname.includes("/login")) {
+         Cookies.remove("accessToken");
+         Cookies.remove("user");
+         window.location.href = "/login";
+       }
     }
-
     return Promise.reject(error);
   }
 );
