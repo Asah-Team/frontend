@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react"; // Hapus useRef
 import { adminServices } from "../api/adminServices";
 import { toast } from "react-hot-toast";
 import { Filter, RotateCw } from "lucide-react";
@@ -6,28 +6,28 @@ import { Filter, RotateCw } from "lucide-react";
 import AdminStats from "../components/admin/AdminStats";
 import SimulatorPanel from "../components/admin/SimulatorPanel";
 import UsersTable from "../components/admin/UsersTable";
-
 import { EditUserPopup, EditRolePopup } from "../components/admin/AdminPopups"; 
 
-const Admin = () => {
-  const [users, setUsers] = useState([]);
-  const [machines, setMachines] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [simStatus, setSimStatus] = useState("Unknown");
-  const [simType, setSimType] = useState(null); 
-  const anomalyIntervalRef = useRef(null); 
+// IMPORT HOOK DARI CONTEXT BARU
+import { useSimulator } from "../context/SimulatorContext";
 
+const Admin = () => {
+  // PANGGIL STATE & FUNGSI DARI GLOBAL CONTEXT
+  const { simType, startNormal, startAnomaly, stopAll } = useSimulator();
+
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [filterRole, setFilterRole] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   
-  // Popup State
   const [editPopupOpen, setEditPopupOpen] = useState(false);
   const [rolePopupOpen, setRolePopupOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
-    fetchUsers(); fetchMachines(); checkSimStatus();
-    return () => clearInterval(anomalyIntervalRef.current); 
+    fetchUsers();
+    // Tidak perlu fetchMachines atau checkSimStatus disini lagi, 
+    // karena sudah dihandle oleh SimulatorContext
   }, []);
 
   const fetchUsers = async () => {
@@ -36,40 +36,7 @@ const Admin = () => {
     catch (err) { toast.error("Failed to load users"); } finally { setLoading(false); }
   };
 
-  const fetchMachines = async () => {
-    try { const { data } = await adminServices.getMachines(); setMachines(data.data || data); } catch (err) {}
-  };
-
-  const checkSimStatus = async () => {
-    try {
-      const { data } = await adminServices.getSimulatorStatus();
-      setSimStatus(data.isRunning ? "Running" : "Stopped");
-      if (data.isRunning && !simType) setSimType('normal'); 
-    } catch (err) {}
-  };
-
-  // Simulator Logic
-  const handleStartNormal = async () => {
-    clearInterval(anomalyIntervalRef.current);
-    try { await adminServices.startNormalSimulator(); setSimType('normal'); setSimStatus('Running'); toast.success("Normal Started"); } catch (err) {}
-  };
-
-  const handleStartAnomaly = async () => {
-    if (machines.length === 0) return toast.error("No machines");
-    if (simType === 'normal') await adminServices.stopSimulator();
-    setSimType('anomaly'); setSimStatus('Running'); toast.success("Anomaly Started");
-    anomalyIntervalRef.current = setInterval(async () => {
-        const rnd = machines[Math.floor(Math.random() * machines.length)];
-        try { await adminServices.triggerAnomaly(rnd.id); } catch(e){}
-    }, 5000);
-  };
-
-  const handleStopAll = async () => {
-    clearInterval(anomalyIntervalRef.current);
-    try { await adminServices.stopSimulator(); setSimStatus('Stopped'); setSimType(null); toast.success("Stopped"); } catch (err) {}
-  };
-
-  // User Actions
+  // User Actions (Tetap disini karena spesifik halaman admin)
   const handleToggleStatus = async (id, isActive) => {
     try { await adminServices.toggleUserStatus(id, isActive ? "deactivate" : "activate"); fetchUsers(); toast.success("Status Updated"); } catch (err) {}
   };
@@ -89,7 +56,14 @@ const Admin = () => {
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen font-sans text-gray-800">
       
       <AdminStats stats={stats} />
-      <SimulatorPanel simType={simType} onStartNormal={handleStartNormal} onStartAnomaly={handleStartAnomaly} onStop={handleStopAll} />
+      
+      {/* SimulatorPanel sekarang dikendalikan oleh Global Context */}
+      <SimulatorPanel 
+        simType={simType} 
+        onStartNormal={startNormal} 
+        onStartAnomaly={startAnomaly} 
+        onStop={stopAll} 
+      />
 
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -112,20 +86,8 @@ const Admin = () => {
         onToggleStatus={handleToggleStatus} 
       />
 
-      {/* Gunakan Komponen Popup Baru */}
-      <EditUserPopup 
-        isOpen={editPopupOpen} 
-        user={selectedUser} 
-        onClose={()=>setEditPopupOpen(false)} 
-        onConfirm={()=>{setEditPopupOpen(false); toast.success("User updated")}} 
-      />
-      
-      <EditRolePopup 
-        isOpen={rolePopupOpen} 
-        user={selectedUser} 
-        onClose={()=>setRolePopupOpen(false)} 
-        onConfirm={handleUpdateRole} 
-      />
+      <EditUserPopup isOpen={editPopupOpen} user={selectedUser} onClose={()=>setEditPopupOpen(false)} onConfirm={()=>{setEditPopupOpen(false); toast.success("User updated")}} />
+      <EditRolePopup isOpen={rolePopupOpen} user={selectedUser} onClose={()=>setRolePopupOpen(false)} onConfirm={handleUpdateRole} />
     </div>
   );
 };
