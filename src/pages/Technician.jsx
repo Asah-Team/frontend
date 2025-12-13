@@ -67,6 +67,7 @@ const Technician = () => {
                 <option value="open">Open</option>
                 <option value="in_progress">In Progress</option>
                 <option value="closed">Closed</option>
+                <option value="canceled">Canceled</option>
             </select>
             <button onClick={fetchTickets} className="ml-auto bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-semibold transition flex items-center shadow-md justify-center">
                 <RotateCw className="w-5 h-5 mr-2" /> Refresh
