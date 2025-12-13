@@ -12,10 +12,21 @@ export const adminServices = {
   stopSimulator: () => axiosClient.post("/sensors/simulator/stop"),
   getSimulatorStatus: () => axiosClient.get("/sensors/simulator/status"),
   
-  // Machine Data (Untuk Random Anomaly)
+  // Machine Data
   getMachines: () => axiosClient.get("/machines"),
 
   // Technician Tasks
   getAllTickets: () => axiosClient.get("/maintenance-tickets"),
   updateTicketStatus: (ticketId, status) => axiosClient.patch(`/maintenance-tickets/${ticketId}`, { status }),
+
+  // RAG DOCUMENTS
+  getAllDocuments: (params) => axiosClient.get("/documents", { params }), 
+  
+  // Endpoint ini HANYA untuk Admin
+  uploadDocument: (formData) => axiosClient.post("/documents/upload", formData, {
+    headers: { "Content-Type": "multipart/form-data" }, 
+  }),
+  
+  // Endpoint ini HANYA untuk Admin
+  deleteDocument: (id) => axiosClient.delete(`/documents/${id}`),
 };

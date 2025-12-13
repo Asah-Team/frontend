@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, Cpu, MessageSquare, Ticket, 
-  Settings, Menu, ShieldCheck, Wrench 
+  Settings, Menu, ShieldCheck, Wrench, BookOpen 
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
@@ -29,6 +29,7 @@ export default function Sidebar() {
     navItems = [
       { path: "/technician", icon: <Wrench size={22} />, label: "Tech Portal" },
       { path: "/chat", icon: <MessageSquare size={22} />, label: "Chat" },
+      { path: "/documents", icon: <BookOpen size={22} />, label: "Manuals & SOPs" },
       { path: "/settings", icon: <Settings size={22} />, label: "Settings" },
     ];
   } else if (user?.role === 'admin') {
@@ -37,9 +38,10 @@ export default function Sidebar() {
       { path: "/", icon: <LayoutDashboard size={22} />, label: "Dashboard" },
       { path: "/chat", icon: <MessageSquare size={22} />, label: "Chat" },
       { path: "/machines", icon: <Cpu size={22} />, label: "Machines" },
-      { path: "/ticket", icon: <Ticket size={22} />, label: "Ticket View" }, // View user biasa
-      { path: "/technician", icon: <Wrench size={22} />, label: "Tech Portal" }, // View kerjaan teknisi
+      { path: "/ticket", icon: <Ticket size={22} />, label: "Ticket View" },
+      { path: "/technician", icon: <Wrench size={22} />, label: "Tech Portal" },
       { path: "/admin", icon: <ShieldCheck size={22} />, label: "Admin Panel" },
+      { path: "/documents", icon: <BookOpen size={22} />, label: "Manuals & SOPs" },
       { path: "/settings", icon: <Settings size={22} />, label: "Settings" },
     ];
   } else {
@@ -49,6 +51,7 @@ export default function Sidebar() {
       { path: "/chat", icon: <MessageSquare size={22} />, label: "Chat" },
       { path: "/machines", icon: <Cpu size={22} />, label: "Machines" },
       { path: "/ticket", icon: <Ticket size={22} />, label: "My Tickets" },
+      { path: "/documents", icon: <BookOpen size={22} />, label: "Manuals & SOPs" },
       { path: "/settings", icon: <Settings size={22} />, label: "Settings" },
     ];
   }

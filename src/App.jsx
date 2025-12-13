@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext";
-import { SimulatorProvider } from "./context/SimulatorContext"; // Import Provider Simulator
+import { SimulatorProvider } from "./context/SimulatorContext"; 
 
 import Overview from "./pages/Overview";
 import Machine from "./pages/Machine";
@@ -13,6 +13,7 @@ import Admin from "./pages/Admin";
 import Technician from "./pages/Technician";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Documents from "./pages/Documents";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import MainLayout from "./layouts/MainLayout";
@@ -22,10 +23,7 @@ function App() {
     <div className="App">
       <Toaster position="top-right" />
       
-      {/* 1. AuthProvider membungkus aplikasi untuk Cek Login */}
-      <AuthProvider>
-        
-        {/* 2. SimulatorProvider membungkus Routes agar Loop Anomali jalan Global */}
+      <AuthProvider>     
         <SimulatorProvider>
           <Routes>
             {/* PUBLIC ROUTES */}
@@ -52,6 +50,12 @@ function App() {
               <Route path="chat" element={<Chat />} />
               <Route path="ticket" element={<Ticket />} />
               <Route path="settings" element={<Settings />} />
+
+              <Route path="documents" element={
+                <ProtectedRoute allowedRoles={['admin', 'technician', 'operator', 'viewer']}>
+                    <Documents />
+                </ProtectedRoute>
+              } />
 
               {/* Admin Only */}
               <Route path="admin" element={
